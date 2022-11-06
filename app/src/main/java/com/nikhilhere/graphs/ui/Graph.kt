@@ -22,6 +22,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.max
+import androidx.core.content.res.ResourcesCompat
+import com.nikhilhere.graphs.R
 
 
 private const val TAG = "Graph"
@@ -34,18 +36,15 @@ fun Graph(
     xAxisStepValue: Float,
     curveSmoothNess: Float = 2f,
     scaleX: Float,
-    scaleY: Float
+    scaleY: Float,
+    showVerticalGrid : Boolean = false,
+    showHorizontalGrid : Boolean = false,
+    showControlPoints : Boolean = false
 ) {
-
-    Log.i(TAG, "Graph: points $points")
-    Log.i(TAG, "Graph: yAxisStepValue $yAxisStepValue")
-    Log.i(TAG, "Graph: xAxisStepValue $xAxisStepValue")
-    Log.i(TAG, "Graph: curveSmoothNess $curveSmoothNess")
-
     Box(modifier = modifier) {
-        Canvas(modifier = Modifier.fillMaxSize()) {
+        val context = LocalContext.current
 
-            Log.i(TAG, "Graph: size $size")
+        Canvas(modifier = Modifier.fillMaxSize()) {
 
             // define size for the x-axis and y-axis labels
             val labelSize = Size(80f, 60f)
@@ -88,15 +87,18 @@ fun Graph(
                     android.graphics.Paint().apply {
                         textSize = 10.dp.toPx()
                         color = android.graphics.Color.BLACK
+                        typeface = ResourcesCompat.getFont(context,R.font.roboto_mono_regular)
                     }
                 )
 
                 // draw vertical grid
-                drawLine(
-                    color = Color.Black,
-                    start = Offset(x, size.height - labelSize.height),
-                    end = Offset(x, 0f),
-                )
+                if (showVerticalGrid) {
+                    drawLine(
+                        color = Color.Black,
+                        start = Offset(x, size.height - labelSize.height),
+                        end = Offset(x, 0f),
+                    )
+                }
             }
 
             // draw y-axis labels
@@ -110,15 +112,18 @@ fun Graph(
                     android.graphics.Paint().apply {
                         textSize = 10.dp.toPx()
                         color = android.graphics.Color.BLACK
+                        typeface = ResourcesCompat.getFont(context,R.font.roboto_mono_regular)
                     }
                 )
 
                 // draw horizontal grid
-                drawLine(
-                    color = Color.Black,
-                    start = Offset(x + labelSize.width, y),
-                    end = Offset(size.width, y),
-                )
+                if (showHorizontalGrid) {
+                    drawLine(
+                        color = Color.Black,
+                        start = Offset(x + labelSize.width, y),
+                        end = Offset(size.width, y),
+                    )
+                }
             }
 
             // draw co-ordinates
@@ -147,17 +152,19 @@ fun Graph(
                     y = endPoint.y
                 )
 
-                drawCircle(
-                    color = Color.Red,
-                    radius = 6f,
-                    center = Offset(c1.x, c1.y)
-                )
+                if (showControlPoints) {
+                    drawCircle(
+                        color = Color.Red,
+                        radius = 6f,
+                        center = Offset(c1.x, c1.y)
+                    )
 
-                drawCircle(
-                    color = Color.Red,
-                    radius = 6f,
-                    center = Offset(c2.x, c2.y)
-                )
+                    drawCircle(
+                        color = Color.Red,
+                        radius = 6f,
+                        center = Offset(c2.x, c2.y)
+                    )
+                }
 
                 val path = Path().apply {
                     moveTo(startPoint.x, startPoint.y)
@@ -170,7 +177,6 @@ fun Graph(
                     style = Stroke(width = 2f)
                 )
             }
-
         }
     }
 }
