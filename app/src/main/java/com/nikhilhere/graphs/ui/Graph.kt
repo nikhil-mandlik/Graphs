@@ -5,6 +5,8 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material.LocalContentColor
+import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
@@ -16,6 +18,8 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.max
 
@@ -26,15 +30,24 @@ private const val TAG = "Graph"
 fun Graph(
     modifier: Modifier,
     points: List<Pair<Int, Int>>,
-    yAxisStepValue: Int = 100,
-    xAxisStepValueRatio: Float = 1f,
-    curveSmoothNess : Float = 2f
+    yAxisStepValue: Float,
+    xAxisStepValue: Float,
+    curveSmoothNess: Float = 2f,
+    scaleX: Float,
+    scaleY: Float
 ) {
 
-    Box(modifier = modifier.drawBehind {
+    Log.i(TAG, "Graph: points $points")
+    Log.i(TAG, "Graph: yAxisStepValue $yAxisStepValue")
+    Log.i(TAG, "Graph: xAxisStepValue $xAxisStepValue")
+    Log.i(TAG, "Graph: curveSmoothNess $curveSmoothNess")
 
-    }) {
+    Box(modifier = modifier) {
         Canvas(modifier = Modifier.fillMaxSize()) {
+
+            Log.i(TAG, "Graph: size $size")
+
+            // define size for the x-axis and y-axis labels
             val labelSize = Size(80f, 60f)
 
             // draw x-axis
@@ -51,55 +64,77 @@ fun Graph(
                 color = Color.Black
             )
 
-            // drawing x-axis text
-            val xAxisStepValue = (size.width / points.size) * xAxisStepValueRatio
-            points.forEachIndexed { index, point ->
+            // draw closing axis, top_left -> top_right, top_right -> bottom_right
+            drawLine(
+                start = Offset(0f + labelSize.width, 0f),
+                end = Offset(size.width, 0f),
+                color = Color.Black
+            )
+            drawLine(
+                start = Offset(size.width, 0f),
+                end = Offset(size.width, size.height - labelSize.height),
+                color = Color.Black
+            )
+
+            // draw x-axis labels
+            (0 until (size.width / xAxisStepValue).toInt()).map {
+                val labelText = "${(xAxisStepValue * (it + 1)).toInt()}"
+                val x = (xAxisStepValue * (it + 1) + labelSize.width) * scaleX
+                val y = size.height
                 drawContext.canvas.nativeCanvas.drawText(
-                    "${point.first}",
-                    xAxisStepValue * (index + 1),
-                    size.height,
+                    labelText,
+                    x,
+                    y,
                     android.graphics.Paint().apply {
                         textSize = 10.dp.toPx()
                         color = android.graphics.Color.BLACK
                     }
+                )
+
+                // draw vertical grid
+                drawLine(
+                    color = Color.Black,
+                    start = Offset(x, size.height - labelSize.height),
+                    end = Offset(x, 0f),
                 )
             }
 
-
-            // drawing y-axis labels
-            var yLabelIndex = 0
-            do {
-                val yLabelPosition =
-                    size.height - labelSize.height - (yAxisStepValue * (yLabelIndex + 1))
+            // draw y-axis labels
+            (0 until (size.height / yAxisStepValue).toInt()).map {
+                val x = 0f
+                val y = (size.height - labelSize.height - (yAxisStepValue * (it + 1))) * scaleY
                 drawContext.canvas.nativeCanvas.drawText(
-                    "${yAxisStepValue * (yLabelIndex + 1)}",
-                    0f,
-                    yLabelPosition,
+                    "${(yAxisStepValue * (it + 1)).toInt()}",
+                    x,
+                    y,
                     android.graphics.Paint().apply {
                         textSize = 10.dp.toPx()
                         color = android.graphics.Color.BLACK
                     }
                 )
-                yLabelIndex++
-            } while (yLabelPosition >= 0f)
 
+                // draw horizontal grid
+                drawLine(
+                    color = Color.Black,
+                    start = Offset(x + labelSize.width, y),
+                    end = Offset(size.width, y),
+                )
+            }
 
-            Log.i(TAG, "size: $size")
+            // draw co-ordinates
             val coordinates = mutableListOf<Offset>()
-            points.forEachIndexed { i, point ->
-                val x = xAxisStepValue * (i + 1)
-                val y = size.height - labelSize.height - point.second
-                Log.i(TAG, "Graph: point $point")
-                Log.i(TAG, "Graph: x $x y $y")
+            points.forEach { point ->
+                val x = point.first.toFloat() * scaleX
+                val y = (size.height - point.second - labelSize.height) * scaleY
                 coordinates.add(Offset(x, y))
                 drawCircle(
                     color = Color.Black,
                     radius = 10f,
-                    center = Offset(x, y.toFloat())
+                    center = Offset(x, y)
                 )
             }
 
-
+            // draw paths and control points
             (0 until coordinates.size - 1).map { index ->
                 val startPoint = coordinates[index]
                 val endPoint = coordinates[index + 1]
@@ -108,7 +143,7 @@ fun Graph(
                     y = startPoint.y
                 )
                 val c2 = Offset(
-                    x = endPoint.x - xAxisStepValue  / curveSmoothNess,
+                    x = endPoint.x - xAxisStepValue / curveSmoothNess,
                     y = endPoint.y
                 )
 
@@ -124,18 +159,18 @@ fun Graph(
                     center = Offset(c2.x, c2.y)
                 )
 
-
                 val path = Path().apply {
                     moveTo(startPoint.x, startPoint.y)
                     cubicTo(c1.x, c1.y, c2.x, c2.y, endPoint.x, endPoint.y)
-
                 }
+
                 drawPath(
                     path = path,
                     color = Color.Black,
                     style = Stroke(width = 2f)
                 )
             }
+
         }
     }
 }
