@@ -12,6 +12,8 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Paint
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.unit.dp
@@ -24,8 +26,9 @@ private const val TAG = "Graph"
 fun Graph(
     modifier: Modifier,
     points: List<Pair<Int, Int>>,
-    yAxisStepValue : Int = 100,
-    xAxisStepValueRatio : Float = 1f
+    yAxisStepValue: Int = 100,
+    xAxisStepValueRatio: Float = 1f,
+    curveSmoothNess : Float = 2f
 ) {
 
     Box(modifier = modifier.drawBehind {
@@ -66,7 +69,8 @@ fun Graph(
             // drawing y-axis labels
             var yLabelIndex = 0
             do {
-                val yLabelPosition = size.height - labelSize.height - (yAxisStepValue * (yLabelIndex  + 1))
+                val yLabelPosition =
+                    size.height - labelSize.height - (yAxisStepValue * (yLabelIndex + 1))
                 drawContext.canvas.nativeCanvas.drawText(
                     "${yAxisStepValue * (yLabelIndex + 1)}",
                     0f,
@@ -81,15 +85,55 @@ fun Graph(
 
 
             Log.i(TAG, "size: $size")
+            val coordinates = mutableListOf<Offset>()
             points.forEachIndexed { i, point ->
                 val x = xAxisStepValue * (i + 1)
                 val y = size.height - labelSize.height - point.second
                 Log.i(TAG, "Graph: point $point")
                 Log.i(TAG, "Graph: x $x y $y")
+                coordinates.add(Offset(x, y))
                 drawCircle(
                     color = Color.Black,
                     radius = 10f,
                     center = Offset(x, y.toFloat())
+                )
+            }
+
+
+            (0 until coordinates.size - 1).map { index ->
+                val startPoint = coordinates[index]
+                val endPoint = coordinates[index + 1]
+                val c1 = Offset(
+                    x = startPoint.x + xAxisStepValue / curveSmoothNess,
+                    y = startPoint.y
+                )
+                val c2 = Offset(
+                    x = endPoint.x - xAxisStepValue  / curveSmoothNess,
+                    y = endPoint.y
+                )
+
+                drawCircle(
+                    color = Color.Red,
+                    radius = 6f,
+                    center = Offset(c1.x, c1.y)
+                )
+
+                drawCircle(
+                    color = Color.Red,
+                    radius = 6f,
+                    center = Offset(c2.x, c2.y)
+                )
+
+
+                val path = Path().apply {
+                    moveTo(startPoint.x, startPoint.y)
+                    cubicTo(c1.x, c1.y, c2.x, c2.y, endPoint.x, endPoint.y)
+
+                }
+                drawPath(
+                    path = path,
+                    color = Color.Black,
+                    style = Stroke(width = 2f)
                 )
             }
         }

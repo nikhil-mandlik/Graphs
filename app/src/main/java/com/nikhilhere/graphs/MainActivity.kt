@@ -4,7 +4,10 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.border
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Slider
 import androidx.compose.material.Surface
@@ -25,7 +28,9 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             Column(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .scrollable(rememberScrollState(), orientation = Orientation.Vertical),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
@@ -37,6 +42,10 @@ class MainActivity : ComponentActivity() {
                     mutableStateOf(1f)
                 }
 
+                var curveSmoothNess by remember {
+                    mutableStateOf(2f)
+                }
+
                 Graph(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -46,13 +55,15 @@ class MainActivity : ComponentActivity() {
                         Pair(1, 300),
                         Pair(2, 80),
                         Pair(3, 500),
-                        Pair(4, 600)
+                        Pair(4, 600),
+                        Pair(5, 300)
                     ),
                     yAxisStepValue = defaultYAxisStepValue,
-                    xAxisStepValueRatio = defaultXaxisScaleRation
+                    xAxisStepValueRatio = defaultXaxisScaleRation,
+                    curveSmoothNess = curveSmoothNess
                 )
 
-                Spacer(modifier = Modifier.height(56.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
                 Slider(
                     modifier = Modifier.padding(40.dp),
@@ -64,6 +75,7 @@ class MainActivity : ComponentActivity() {
                     }
                 )
 
+                Spacer(modifier = Modifier.height(16.dp))
                 Slider(
                     modifier = Modifier.padding(40.dp),
                     value = defaultXaxisScaleRation,
@@ -71,6 +83,17 @@ class MainActivity : ComponentActivity() {
                     steps = 5,
                     onValueChange = {
                         defaultXaxisScaleRation = it
+                    }
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+                Slider(
+                    modifier = Modifier.padding(40.dp),
+                    value = curveSmoothNess,
+                    valueRange = 1f..4f,
+                    steps = 5,
+                    onValueChange = {
+                        curveSmoothNess = it
                     }
                 )
 
