@@ -37,9 +37,9 @@ fun Graph(
     curveSmoothNess: Float = 2f,
     scaleX: Float,
     scaleY: Float,
-    showVerticalGrid : Boolean = false,
-    showHorizontalGrid : Boolean = false,
-    showControlPoints : Boolean = false
+    showVerticalGrid: Boolean = false,
+    showHorizontalGrid: Boolean = false,
+    showControlPoints: Boolean = false
 ) {
     Box(modifier = modifier) {
         val context = LocalContext.current
@@ -87,7 +87,7 @@ fun Graph(
                     android.graphics.Paint().apply {
                         textSize = 10.dp.toPx()
                         color = android.graphics.Color.BLACK
-                        typeface = ResourcesCompat.getFont(context,R.font.roboto_mono_regular)
+                        typeface = ResourcesCompat.getFont(context, R.font.roboto_mono_regular)
                     }
                 )
 
@@ -104,7 +104,7 @@ fun Graph(
             // draw y-axis labels
             (0 until (size.height / yAxisStepValue).toInt()).map {
                 val x = 0f
-                val y = (size.height - labelSize.height - (yAxisStepValue * (it + 1))) * scaleY
+                val y = (size.height - labelSize.height - (yAxisStepValue * (it + 1) * scaleY))
                 drawContext.canvas.nativeCanvas.drawText(
                     "${(yAxisStepValue * (it + 1)).toInt()}",
                     x,
@@ -112,7 +112,7 @@ fun Graph(
                     android.graphics.Paint().apply {
                         textSize = 10.dp.toPx()
                         color = android.graphics.Color.BLACK
-                        typeface = ResourcesCompat.getFont(context,R.font.roboto_mono_regular)
+                        typeface = ResourcesCompat.getFont(context, R.font.roboto_mono_regular)
                     }
                 )
 
@@ -130,7 +130,7 @@ fun Graph(
             val coordinates = mutableListOf<Offset>()
             points.forEach { point ->
                 val x = point.first.toFloat() * scaleX
-                val y = (size.height - point.second - labelSize.height) * scaleY
+                val y = size.height - labelSize.height - (point.second * scaleY)
                 coordinates.add(Offset(x, y))
                 drawCircle(
                     color = Color.Black,
